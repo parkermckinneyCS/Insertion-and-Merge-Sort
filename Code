@@ -1,0 +1,139 @@
+import time
+import random
+import sys
+import matplotlib.pyplot as plt
+
+# Adjust Python's recursion limit just in case students write deep recursive structures
+sys.setrecursionlimit(20000)
+
+def insertion_sort(arr):
+    """
+    TODO: Implement Insertion Sort.
+    Must return a tuple: (sorted_array, comparison_count)
+    """
+    # Insertion Sort builds a sorted portion of the array by taking each next
+    # element, shifting larger elements to the right, and inserting it in order.
+    comparisons = 0
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+
+        while j >= 0:
+            comparisons += 1
+            if arr[j] > key:
+                arr[j + 1] = arr[j]
+                j -= 1
+            else:
+                break
+
+        arr[j + 1] = key
+
+    return arr, comparisons
+
+
+def merge_sort(arr):
+    """
+    TODO: Implement Merge Sort.
+    Must return a tuple: (sorted_array, comparison_count)
+    """
+    # Merge Sort repeatedly divides the array into halves until each has at most
+    # one element, then merges the halves back together in sorted order.
+    if len(arr) <= 1:
+        return arr, 0
+
+    midpoint = len(arr) // 2
+    left, left_comparisons = merge_sort(arr[:midpoint])
+    right, right_comparisons = merge_sort(arr[midpoint:])
+    comparisons = left_comparisons + right_comparisons
+    i = j = k = 0
+
+    while i < len(left) and j < len(right):
+        comparisons += 1
+        if left[i] <= right[j]:
+            arr[k] = left[i]
+            i += 1
+        else:
+            arr[k] = right[j]
+            j += 1
+        k += 1
+
+    while i < len(left):
+        arr[k] = left[i]
+        i += 1
+        k += 1
+
+    while j < len(right):
+        arr[k] = right[j]
+        j += 1
+        k += 1
+    return arr, comparisons
+
+
+def run_benchmarks():
+    # Array sizes to sample for empirical analysis
+    sizes = [100, 500, 1000, 2500, 5000, 7500, 10000]
+    
+    insertion_times = []
+    merge_times = []
+    insertion_comps = []
+    merge_comps = []
+    
+    print(f"{'N':<10}{'Insertion Time (s)':<20}{'Merge Time (s)':<20}{'Insertion Comps':<18}{'Merge Comps':<18}")
+    print("-" * 86)
+    
+    for size in sizes:
+        # Generate identical random test inputs for behavioral consistency
+        base_arr = [random.randint(1, 100000) for _ in range(size)]
+        
+        # Benchmark Insertion Sort
+        arr_copy = list(base_arr)
+        start_time = time.perf_counter()
+        _, ins_c = insertion_sort(arr_copy)
+        end_time = time.perf_counter()
+        ins_t = end_time - start_time
+        
+        # Benchmark Merge Sort
+        arr_copy = list(base_arr)
+        start_time = time.perf_counter()
+        _, mrg_c = merge_sort(arr_copy)
+        end_time = time.perf_counter()
+        mrg_t = end_time - start_time
+        
+        # Store tracking telemetry
+        insertion_times.append(ins_t)
+        merge_times.append(mrg_t)
+        insertion_comps.append(ins_c)
+        merge_comps.append(mrg_c)
+        
+        print(f"{size:<10}{ins_t:<20.5f}{mrg_t:<20.5f}{ins_c:<18}{mrg_c:<18}")
+
+    # --- MANDATORY UNIFORM PLOTTING HOOKS ---
+    # DO NOT ALTER THE STRUCTURE BELOW TO MAINTAIN GRADING COMPLIANCE
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Subplot 1: Wall-Clock Execution Runtimes
+    ax1.plot(sizes, insertion_times, label='Insertion Sort', marker='o', color='crimson')
+    ax1.plot(sizes, merge_times, label='Merge Sort', marker='s', color='dodgerblue')
+    ax1.set_title('Empirical Runtime Efficiency (Wall-Clock)')
+    ax1.set_xlabel('Input Size (N)')
+    ax1.set_ylabel('Execution Time (seconds)')
+    ax1.grid(True, linestyle='--', alpha=0.6)
+    ax1.legend()
+    
+    # Subplot 2: Primitive Operation Comparisons Counts
+    ax2.plot(sizes, insertion_comps, label='Insertion Sort', marker='o', color='crimson')
+    ax2.plot(sizes, merge_comps, label='Merge Sort', marker='s', color='dodgerblue')
+    ax2.set_title('Asymptotic Growth: Primitive Comparisons')
+    ax2.set_xlabel('Input Size (N)')
+    ax2.set_ylabel('Total Count of Element Comparisons')
+    ax2.grid(True, linestyle='--', alpha=0.6)
+    ax2.legend()
+    
+    plt.tight_layout()
+    plt.savefig('sorting_benchmark_results.png', dpi=300)
+    print("\n[Harness] Execution successful. Charts exported as 'sorting_benchmark_results.png'.")
+    plt.show()
+
+if __name__ == "__main__":
+    run_benchmarks()
